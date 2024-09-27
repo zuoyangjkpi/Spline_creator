@@ -134,7 +134,7 @@ customColors = [
     0 0 1;   % Blue
     0 1 0;   % Green
     1 0 0;   % Red
-    0.5 0.5 0.5;   % Grey
+    0.5 0.5 0.5;   % G
     1 0 1;   % Magenta
     0 1 1;   % Cyan
     0.5 0 0.5; % Purple
@@ -183,10 +183,9 @@ for i = min_idx:(min_idx+j-2)
      'FontSize', fontSize, 'Color', color, 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom');
 end
 
-xlabel('$x$ [m]', 'FontSize', fontSize, 'Interpreter', 'latex');
-ylabel('$y$ [m]', 'FontSize', fontSize, 'Interpreter', 'latex');
-zlabel('$z$ [m]', 'FontSize', fontSize, 'Interpreter', 'latex');
-title('UTM Coordinate System', 'FontSize', fontSize + 2)
+xlabel('x [m]', 'FontSize', fontSize);
+ylabel('y [m]', 'FontSize', fontSize);
+zlabel('z [m]', 'FontSize', fontSize);
 set(gca, 'FontSize', fontSize); % Apply font size
 
 % Plot the start point using Mission.CoeffsXYZ (using the first row)
