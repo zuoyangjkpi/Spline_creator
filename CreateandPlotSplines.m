@@ -118,7 +118,7 @@ Mission.CoeffsXYZ   = [XCoeff, YCoeff, ZCoeff];
 
 % clear Splines i n_Splines variable x y z Err_id curr_dir mis_id selection
 
-save Splines_Mengen_Eight Mission;
+save Splines_Mengen_Eight_Klein Mission;
 
 
 %%
@@ -152,6 +152,8 @@ numColors = size(customColors, 1);
 radius = 20;  % Sphere for the start point
 line_length = 50;  % Length of separating lines between splines
 [X_sphere, Y_sphere, Z_sphere] = sphere(20);  % Create a unit sphere with 20 subdivisions for the starting point
+lat = [];
+lon = [];
 
 % Loop over each spline segment
 for i = min_idx:(min_idx+j-2)
@@ -181,8 +183,12 @@ for i = min_idx:(min_idx+j-2)
     % Add text to mark each spline
     text(x_center - 15, y_center + 25, z_center + line_length, sprintf('%d', i-min_idx+1), ...
      'FontSize', fontSize, 'Color', color, 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom');
-end
 
+    % Convert [x, y] in [lat,lon]    
+    [latitide, longitude] = UTM2LL((Splines.data(i, 3) - 60)*3, y, x - 6378137*(pi/180)*(Splines.data(i, 3) - 60)*3);
+    lat = [lat; latitide];
+    lon = [lon; longitude];
+end
 xlabel('$x$ [m]', 'FontSize', fontSize, 'Interpreter', 'latex');
 ylabel('$y$ [m]', 'FontSize', fontSize, 'Interpreter', 'latex');
 zlabel('$z$ [m]', 'FontSize', fontSize, 'Interpreter', 'latex');
@@ -197,12 +203,20 @@ z_start = Mission.CoeffsXYZ(1, 9);  % Z coordinate
 % Plot the start point as a large black sphere
 surf(radius*X_sphere + x_start, radius*Y_sphere + y_start, radius*Z_sphere + z_start, ...
      'FaceColor', 'k', 'EdgeColor', 'none');  % 'k' for black color (start point)
-
 % Move the text a bit right from the starting point
 % text(x_start + 50, y_start + 80, z_start, 'Start Point', ...
 %      'FontSize', fontSize - 2, 'Color', 'k', 'FontWeight', 'bold', 'HorizontalAlignment', 'left');
-
 hold off
+
+% 绘制2D飞行路径轨迹
+figure;              
+geoplot(lat, lon, '-b', 'LineWidth', 2);
+geobasemap streets;  % 可以选择不同的地图样式，如 'satellite', 'streets', 'topographic'
+title('2D Flight Trajectory');
+
+
+
+
 
 
 

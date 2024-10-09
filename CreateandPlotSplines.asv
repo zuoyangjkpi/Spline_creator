@@ -134,7 +134,7 @@ customColors = [
     0 0 1;   % Blue
     0 1 0;   % Green
     1 0 0;   % Red
-    0.5 0.5 0.5;   % G
+    0.5 0.5 0.5;   % Grey
     1 0 1;   % Magenta
     0 1 1;   % Cyan
     0.5 0 0.5; % Purple
@@ -152,6 +152,8 @@ numColors = size(customColors, 1);
 radius = 20;  % Sphere for the start point
 line_length = 50;  % Length of separating lines between splines
 [X_sphere, Y_sphere, Z_sphere] = sphere(20);  % Create a unit sphere with 20 subdivisions for the starting point
+lat = [];
+lon = [];
 
 % Loop over each spline segment
 for i = min_idx:(min_idx+j-2)
@@ -181,11 +183,16 @@ for i = min_idx:(min_idx+j-2)
     % Add text to mark each spline
     text(x_center - 15, y_center + 25, z_center + line_length, sprintf('%d', i-min_idx+1), ...
      'FontSize', fontSize, 'Color', color, 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom');
-end
 
-xlabel('x [m]', 'FontSize', fontSize);
-ylabel('y [m]', 'FontSize', fontSize);
-zlabel('z [m]', 'FontSize', fontSize);
+    % Convert [x, y] in [lat,lon]    
+    [latitide, longitude] = UTM2LatLong(x, y, 15, 'N'); 
+    lat = [lat; latitide];
+    lon = [lon; longitude];
+end
+xlabel('$x$ [m]', 'FontSize', fontSize, 'Interpreter', 'latex');
+ylabel('$y$ [m]', 'FontSize', fontSize, 'Interpreter', 'latex');
+zlabel('$z$ [m]', 'FontSize', fontSize, 'Interpreter', 'latex');
+title('UTM Coordinate System', 'FontSize', fontSize + 2)
 set(gca, 'FontSize', fontSize); % Apply font size
 
 % Plot the start point using Mission.CoeffsXYZ (using the first row)
@@ -202,6 +209,104 @@ surf(radius*X_sphere + x_start, radius*Y_sphere + y_start, radius*Z_sphere + z_s
 %      'FontSize', fontSize - 2, 'Color', 'k', 'FontWeight', 'bold', 'HorizontalAlignment', 'left');
 
 hold off
+
+% 绘制2D飞行路径轨迹
+figure;
+              
+geoplot(lat, lon, '-b', 'LineWidth', 2);
+geobasemap streets;  % 可以选择不同的地图样式，如 'satellite', 'streets', 'topographic'
+title('2D Flight Trajectory');
+
+function [lat, lon] = UTM2LatLong(easting, northing, zoneNumber, hemisphere)
+    % UTM2LatLong converts UTM coordinates to latitude and longitude.
+    %
+    % Inputs:
+    %   easting    - Easting in meters (vector)
+    %   northing   - Northing in meters (vector)
+    %   zoneNumber - UTM zone number (scalar or vector matching the size of easting/northing)
+    %   hemisphere - 'N' or 'S' (scalar or vector matching the size of easting/northing)
+    %
+    % Outputs:
+    %   lat - Latitude in decimal degrees (vector)
+    %   lon - Longitude in decimal degrees (vector)
+    
+    % WGS84 ellipsoid constants
+    a = 6378137.0; % Semi-major axis
+    e = 0.0818191908; % Eccentricity
+    k0 = 0.9996; % Scale factor
+    
+    % Ensure inputs are column vectors
+    easting = easting(:);
+    northing = northing(:);
+    
+    % Check if zoneNumber and hemisphere are scalars, and replicate if necessary
+    if isscalar(zoneNumber)
+        zoneNumber = repmat(zoneNumber, size(easting));
+    else
+        zoneNumber = zoneNumber(:);
+    end
+    
+    if ischar(hemisphere) || isstring(hemisphere)
+        hemisphere = repmat(hemisphere, size(easting));
+    else
+        hemisphere = hemisphere(:);
+    end
+    
+    % Remove false easting
+    x = easting - 500000.0;
+    
+    % Remove false northing for southern hemisphere
+    isSouthernHemisphere = upper(hemisphere) == 'S';
+    y = northing;
+    y(isSouthernHemisphere) = y(isSouthernHemisphere) - 10000000.0;
+    
+    % Calculate the meridional arc
+    M = y ./ k0;
+    
+    % Calculate the footprint latitude
+    e1 = (1 - sqrt(1 - e^2)) / (1 + sqrt(1 - e^2));
+    mu = M ./ (a * (1 - e^2 / 4 - 3 * e^4 / 64 - 5 * e^6 / 256));
+    
+    % Calculate latitude-related parameters
+    J1 = (3 * e1 / 2 - 27 * e1^3 / 32);
+    J2 = (21 * e1^2 / 16 - 55 * e1^4 / 32);
+    J3 = (151 * e1^3 / 96);
+    J4 = (1097 * e1^4 / 512);
+    
+    % Footprint latitude
+    fp = mu + J1 .* sin(2 .* mu) + J2 .* sin(4 .* mu) + J3 .* sin(6 .* mu) + J4 .* sin(8 .* mu);
+    
+    % Calculate latitude and longitude
+    e2 = e^2 / (1 - e^2);
+    C1 = e2 .* cos(fp).^2;
+    T1 = tan(fp).^2;
+    R1 = a * (1 - e^2) ./ (1 - e^2 .* sin(fp).^2).^(3 / 2);
+    N1 = a ./ sqrt(1 - e^2 .* sin(fp).^2);
+    
+    D = x ./ (N1 .* k0);
+    
+    % Latitude calculations
+    Q1 = N1 .* tan(fp) ./ R1;
+    Q2 = D.^2 / 2;
+    Q3 = (5 + 3 .* T1 + 10 .* C1 - 4 .* C1.^2 - 9 .* e2) .* D.^4 / 24;
+    Q4 = (61 + 90 .* T1 + 298 .* C1 + 45 .* T1.^2 - 252 .* e2 - 3 .* C1.^2) .* D.^6 / 720;
+    lat_rad = fp - Q1 .* (Q2 - Q3 + Q4);
+    
+    % Longitude calculations
+    Q5 = D;
+    Q6 = (1 + 2 .* T1 + C1) .* D.^3 / 6;
+    Q7 = (5 - 2 .* C1 + 28 .* T1 - 3 .* C1.^2 + 8 .* e2 + 24 .* T1.^2) .* D.^5 / 120;
+    lon_rad = (Q5 - Q6 + Q7) ./ cos(fp);
+    
+    % Convert radians to degrees
+    lat = rad2deg(lat_rad);
+    lon = rad2deg(lon_rad) + (zoneNumber - 1) * 6 - 180 + 3;
+
+end
+
+
+
+
 
 
 
