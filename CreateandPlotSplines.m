@@ -130,8 +130,8 @@ duplicate_indices = setdiff( 1:numel(XCoeff(:,1)), w );
 
 min_idx = duplicate_indices(1);
 
-j = 11; % for flat 8s
-%j = 17; % for non-flat 8s
+j = 9; % for big 8
+%j = 11; % for small 8
 
 XCoeff      = Splines.data(min_idx:(min_idx+j), 8:11);
 YCoeff      = Splines.data(min_idx:(min_idx+j),12:15);
@@ -149,7 +149,7 @@ Mission.CoeffsXYZ   = [XCoeff, YCoeff, ZCoeff];
 
 % clear Splines i n_Splines variable x y z Err_id curr_dir mis_id selection
 
-save Splines_Mengen_Eight_Klein Mission;
+save Splines_Mengen_Eight Mission;
 
 
 %%
