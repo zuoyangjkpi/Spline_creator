@@ -7,6 +7,21 @@ clear
 close all
 clc
 
+Mission_id = input('Please enter the Splines file name (1 for big eight, 2 for small eight): ');
+% Parse the suffix to determine 'j' and set the variable name accordingly
+if Mission_id == 1
+    j = 9;
+    suffix = '_Eight';
+    missionVarName = 'Mission_Eight';
+elseif Mission_id == 2
+    j = 11;
+    suffix = '_Eight_Klein';
+    missionVarName = 'Mission_Eight_Klein';
+else
+    error('Please only enter 1 or 2');
+end
+
+%%
 fprintf(['\n',repmat('=',1, 85),'\n']);
 fprintf('Select Data Addresses File\n');
 fprintf([repmat('=',1, 85),'\n']);
@@ -130,26 +145,27 @@ duplicate_indices = setdiff( 1:numel(XCoeff(:,1)), w );
 
 min_idx = duplicate_indices(1);
 
-j = 9; % for big 8
-%j = 11; % for small 8
-
 XCoeff      = Splines.data(min_idx:(min_idx+j), 8:11);
 YCoeff      = Splines.data(min_idx:(min_idx+j),12:15);
 ZCoeff      = Splines.data(min_idx:(min_idx+j),16:19);
 
-Mission.Coeffs4      = Splines.data(min_idx:(min_idx+j),20:23);
-Mission.Type4       = Splines.data(min_idx:(min_idx+j),2);
-Mission.ExitValue   = Splines.data(min_idx:(min_idx+j),7);
-Mission.ExitCond    = 0*Splines.data(min_idx:(min_idx+j),7);
-Mission.UTMLong     = Splines.data(min_idx:(min_idx+j),3);
-Mission.UTMArea     = Splines.data(min_idx:(min_idx+j),4);
-Mission.SpLength    = Splines.data(min_idx:(min_idx+j),7);
-Mission.SplineIndex = [1:j+1]';
-Mission.CoeffsXYZ   = [XCoeff, YCoeff, ZCoeff];
+% Prepare the MissionData struct
+MissionData.Coeffs4     = Splines.data(min_idx:(min_idx+j),20:23);
+MissionData.Type4       = Splines.data(min_idx:(min_idx+j),2);
+MissionData.ExitValue   = Splines.data(min_idx:(min_idx+j),7);
+MissionData.ExitCond    = zeros(size(MissionData.ExitValue));
+MissionData.UTMLong     = Splines.data(min_idx:(min_idx+j),3);
+MissionData.UTMArea     = Splines.data(min_idx:(min_idx+j),4);
+MissionData.SpLength    = Splines.data(min_idx:(min_idx+j),7);
+MissionData.SplineIndex = (1:j+1)';
+MissionData.CoeffsXYZ   = [XCoeff, YCoeff, ZCoeff];
 
-% clear Splines i n_Splines variable x y z Err_id curr_dir mis_id selection
+% Assign to variable with name missionVarName
+eval([missionVarName, ' = MissionData;']);
 
-save Splines_Mengen_Eight Mission;
+% Save the variable with the corresponding suffix
+missionFileName = ['Splines_Mengen', suffix, '.mat'];
+save(missionFileName, missionVarName);
 
 
 %%
@@ -227,9 +243,9 @@ title('UTM Coordinate System', 'FontSize', fontSize + 2)
 set(gca, 'FontSize', fontSize); % Apply font size
 
 % Plot the start point using Mission.CoeffsXYZ (using the first row)
-x_start = Mission.CoeffsXYZ(1, 1) + 6378137*(pi/180)*(Splines.data(i, 3) - 60)*3;  % X coordinate
-y_start = Mission.CoeffsXYZ(1, 5) + 1000000*(Splines.data(i, 4) - 10);  % Y coordinate
-z_start = Mission.CoeffsXYZ(1, 9);  % Z coordinate
+x_start = MissionData.CoeffsXYZ(1, 1) + 6378137*(pi/180)*(Splines.data(i, 3) - 60)*3;  % X coordinate
+y_start = MissionData.CoeffsXYZ(1, 5) + 1000000*(Splines.data(i, 4) - 10);  % Y coordinate
+z_start = MissionData.CoeffsXYZ(1, 9);  % Z coordinate
 
 % Plot the start point as a large black sphere
 surf(radius*X_sphere + x_start, radius*Y_sphere + y_start, radius*Z_sphere + z_start, ...
