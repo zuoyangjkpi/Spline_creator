@@ -20,17 +20,17 @@ L = norm([x_start, y_start, z_start] - [x_end, y_end, z_end]);
 chi = atan2((x_end-x_start),(y_end-y_start));
 gamma = atan2((z_end-z_start),norm([x_start, y_start] - [x_end, y_end]));
 
-Mission.Coeffs4      = [V_A, 0, 0, 0];
-Mission.Type4       = 1;
-Mission.ExitValue   = L;
-Mission.ExitCond    = 0;
-Mission.UTMLong     = 63;
-Mission.UTMArea     = floor(y_start/1000000)+10;
-Mission.SpLength    = L;
-Mission.SplineIndex = 1;
-Mission.CoeffsXYZ   = [x_start, cos(gamma)*sin(chi),0,0, y_start-1000000*floor(y_start/1000000), cos(gamma)*cos(chi),0,0, z_start, sin(gamma),0,0];
+Mission_Straight.Coeffs4      = [V_A, 0, 0, 0];
+Mission_Straight.Type4       = 1;
+Mission_Straight.ExitValue   = L;
+Mission_Straight.ExitCond    = 0;
+Mission_Straight.UTMLong     = 63;
+Mission_Straight.UTMArea     = floor(y_start/1000000)+10;
+Mission_Straight.SpLength    = L;
+Mission_Straight.SplineIndex = 1;
+Mission_Straight.CoeffsXYZ   = [x_start, cos(gamma)*sin(chi),0,0, y_start-1000000*floor(y_start/1000000), cos(gamma)*cos(chi),0,0, z_start, sin(gamma),0,0];
 
-save Splines_Mengen_Straight Mission;
+save Splines_Mengen_Straight Mission_Straight;
 %%
 % Define a custom set of distinct colors (you can adjust these)
 customColors = [
@@ -38,18 +38,11 @@ customColors = [
 ];
 
 numColors = size(customColors, 1);
-variable = [0:Mission.SpLength Mission.SpLength];
+variable = [0:Mission_Straight.SpLength Mission_Straight.SpLength];
 
-x = Mission.CoeffsXYZ(1) + Mission.CoeffsXYZ( 2).*variable + Mission.CoeffsXYZ( 3).*(variable.^2) + Mission.CoeffsXYZ( 4).*(variable.^3) + 6378137*(pi/180)*9;
-y = Mission.CoeffsXYZ(5) + Mission.CoeffsXYZ( 6).*variable + Mission.CoeffsXYZ( 7).*(variable.^2) + Mission.CoeffsXYZ( 8).*(variable.^3) + 1000000*(Mission.UTMArea - 10);
-z = Mission.CoeffsXYZ(9) + Mission.CoeffsXYZ(10).*variable + Mission.CoeffsXYZ(11).*(variable.^2) + Mission.CoeffsXYZ(12).*(variable.^3);
-
-% figure()
-% plot3(x,y,z,'b')
-% hold on
-% grid on
-% plot3(x1,y1,z1,'bx')
-% plot3(x2,y2,z2,'rx')
+x = Mission_Straight.CoeffsXYZ(1) + Mission_Straight.CoeffsXYZ( 2).*variable + Mission_Straight.CoeffsXYZ( 3).*(variable.^2) + Mission_Straight.CoeffsXYZ( 4).*(variable.^3) + 6378137*(pi/180)*9;
+y = Mission_Straight.CoeffsXYZ(5) + Mission_Straight.CoeffsXYZ( 6).*variable + Mission_Straight.CoeffsXYZ( 7).*(variable.^2) + Mission_Straight.CoeffsXYZ( 8).*(variable.^3) + 1000000*(Mission_Straight.UTMArea - 10);
+z = Mission_Straight.CoeffsXYZ(9) + Mission_Straight.CoeffsXYZ(10).*variable + Mission_Straight.CoeffsXYZ(11).*(variable.^2) + Mission_Straight.CoeffsXYZ(12).*(variable.^3);
 
 % Get color for the current spline from the custom colors array
 color = customColors(1, :);
@@ -71,9 +64,9 @@ line_length = 50;  % Length of separating lines between splines
 [X_sphere, Y_sphere, Z_sphere] = sphere(20);  % Create a unit sphere with 20 subdivisions for the starting point
 
 % Plot the start point using Mission.CoeffsXYZ (using the first row)
-x_start = Mission.CoeffsXYZ(1, 1) + 6378137*(pi/180)*9;  % X coordinate
-y_start = Mission.CoeffsXYZ(1, 5) + 1000000*5;  % Y coordinate
-z_start = Mission.CoeffsXYZ(1, 9);  % Z coordinate
+x_start = Mission_Straight.CoeffsXYZ(1, 1) + 6378137*(pi/180)*9;  % X coordinate
+y_start = Mission_Straight.CoeffsXYZ(1, 5) + 1000000*5;  % Y coordinate
+z_start = Mission_Straight.CoeffsXYZ(1, 9);  % Z coordinate
 
 % Plot the start point using Mission.CoeffsXYZ (using the last row)
 x_end = x(end);  % X coordinate
