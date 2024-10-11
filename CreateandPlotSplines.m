@@ -130,7 +130,7 @@ duplicate_indices = setdiff( 1:numel(XCoeff(:,1)), w );
 
 min_idx = duplicate_indices(1);
 
-j = 13; % for flat 8s
+j = 11; % for flat 8s
 %j = 17; % for non-flat 8s
 
 XCoeff      = Splines.data(min_idx:(min_idx+j), 8:11);
@@ -187,7 +187,7 @@ lat = [];
 lon = [];
 
 % Loop over each spline segment
-for i = min_idx:(min_idx+j-2)
+for i = min_idx:(min_idx+j)
     
     variable = [0:Splines.data(i,7) Splines.data(i,7)];
     
