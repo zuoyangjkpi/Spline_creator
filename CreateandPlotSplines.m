@@ -40,7 +40,38 @@ else
     selection = 1;
 end
 
-Err_id = system(sprintf('Path_Planner_new.exe Aircraft_X.txt %s', curr_dir(selection).name));
+% 添加这部分代码来选择 Aircraft 文件
+aircraft_files = dir(fullfile(pwd,'\\Aircraft_*.txt'));
+
+if (length(aircraft_files)>1)
+    % 选择文件
+    fprintf('\nPlease select the desired Aircraft file:\n\n');
+    fprintf('   0: Abort Operation\n');
+    for i = 1:length(aircraft_files)
+        fprintf('   %i: %s\n',i,aircraft_files(i).name);
+    end
+
+    selected_aircraft = 0;
+    while selected_aircraft == 0
+        selection_aircraft = input('\nWhich is the desired Aircraft file?: ');
+        if (length(selection_aircraft) > 1) || (length(selection_aircraft) == 1 && (selection_aircraft > length(aircraft_files) || mod(selection_aircraft,1) || selection_aircraft < 0)) || ~isnumeric(selection_aircraft)
+            fprintf(2, '\nPlease enter only one valid numeric value\n');
+        elseif selection_aircraft ~= 0
+            fprintf('\n   Selected Aircraft: %s\n\n', aircraft_files(selection_aircraft).name);
+            selected_aircraft = 1;
+        elseif selection_aircraft == 0
+            fprintf('\nTerminating\n\n');
+            return;
+        else
+            fprintf(2, '\nPlease enter a value\n');
+        end
+    end
+else
+    selection_aircraft = 1;
+end
+
+% 使用选择的 Aircraft 文件
+Err_id = system(sprintf('Path_Planner_new.exe %s %s', aircraft_files(selection_aircraft).name, curr_dir(selection).name));
 
 if (Err_id~=0)
     error('%i',Err_id);
